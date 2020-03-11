@@ -18,7 +18,7 @@ library(basictabler)
 energy <- read_csv("https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD", 
                    na = "0")
 energy[is.na(energy)]<-0
-PAGE_TITLE<-"Renewable Energy Generated In Maryland "
+PAGE_TITLE<-"Renewable Energy In Maryland "
 energy<-energy[-9,]
 energy<-energy[-9,]
 attach(energy)
@@ -49,28 +49,43 @@ headerImagePanel <- function(title, src) {
 datainfo<-tabPanel("About",
                    mainPanel(style = "font-size:20px", #font-family: 'Lobster', cursive",
                             # p{style = "font-family: Lucida Grande,Lucida Sans Unicode"}
-                     p(),
+                            p(),
+                     p(helpText("This page contains two datasets regarding the recorded generated renewable energy and the estimated)
+                       capacity for it.")),
+                     p(helpText("The first dataset estimates the installed capacity for renewable energy generation in Maryland, in 
+                       megawatts (MW). Reported data comes from energy generators in Maryland registered to generate 
+                                renewable energy credits (RECs) through the PJM Environmental Information Services (EIS) 
+                                Generation Attributes Tracking System (GATS) (available ", a("here).", target="_blank", 
+                                                                                            href="https://gats.pjm-eis.com/gats2/PublicReports/RenewableGeneratorsRegisteredinGATS")), 
+                       style = "font-family: Lucida Grande,Lucida Sans Unicode"
+                       ),
+                     helpText(
+                     p("As renewable energy generators are not required to register in GATS, there may be some renewable energy 
+                       generation capacity installed in Maryland but not generating RECs that is not captured in this estimate.",
+                       style = "font-family: Lucida Grande,Lucida Sans Unicode"),
                      p("This data set describes the amount of energy generated annually by renewable sources 
                        in Maryland in megawatt hours (MWh). In addition, there is a column which describes 
                        the percent of all energy generated in Maryland coming from renewable sources each year.", style = "font-family: Lucida Grande,Lucida Sans Unicode"),
                      p("Renewable energy generation data comes from PJM's Generation Attribute Tracking System 
                        (PJM GATS). Total generation comes from the U.S. Energy Information Administration's State 
-                       Level Generation report, released in October 2016 with revisions in November 2016", style = "font-family: Lucida Grande,Lucida Sans Unicode", 
+                       Level Generation report, released in October 2016 with revisions in November 2016.", style = "font-family: Lucida Grande,Lucida Sans Unicode", 
                        helpText(a("Click here to access the U.S. Energy Information Administration page", target="_blank", href="https://www.eia.gov/electricity/data.php")
     ))
                      )
-                             )
+                             ))
 
 dataPanel<-tabPanel("Data",
                    
                         #input selector
-                        selectInput(inputId = "dataset",
+                        selectInput(
+                          p(),
+                          inputId = "dataset",
                                     label="Select a dataset",
-                                    choices= c(" ", "Renewable Energy Generation Capacity (2006-2017)", "Renewable Energy Generated (2007-2017)"))
+                                    choices= c(" ", "Renewable Energy Generation Capacity (2006-2017) ", "Renewable Energy Generated (2007-2017) "))
                       ,
                     mainPanel(
                       br(),
-                      DT::dataTableOutput("dataTable")
+                      DT::dataTableOutput("dataTable"), align="center"
                       )
                     )
 
@@ -113,8 +128,8 @@ server<-function(input,output){
   
   datasetInput<- reactive({ req(input$dataset)
     switch(input$dataset,
-           "Renewable Energy Generation Capacity (2006-2017)"= gen,
-           "Renewable Energy Generated (2007-2017)"= energy
+           "Renewable Energy Generation Capacity (2006-2017) "= gen,
+           "Renewable Energy Generated (2007-2017) "= energy
     )
   })
   
