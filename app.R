@@ -3,11 +3,16 @@ library(shiny)
 library(shinythemes)
 library(tidyverse)
 library(magrittr)
+library(gapminder)
 library(shinyjs)
 library(plotly)
 library(htmltools)
+library(htmlwidgets)
+library(metricsgraphics)
+library(RColorBrewer)
 library(DT)
 library(iotools)
+library(basictabler)
 library(qrmtools)
 library(reshape2)
 
@@ -157,7 +162,7 @@ ui<-fluidPage(theme=shinytheme("readable"),
               
                 )
 
-server<-function(input,output){
+server<-function(input,output, session){
   #push data table
   output$image<-renderUI(
     tag$img(src="https://www.cancer.gov/images/cdr/live/CDR755927-750.jpg")
@@ -227,10 +232,11 @@ server<-function(input,output){
     content = function(file) {
       tempReport <- file.path(tempdir(), "report.Rmd")
       
+      year55=isolate(input$year2)
+      
       file.copy("report.Rmd", tempReport, overwrite = TRUE)
-      params<-list(year=isolate(input$year2))
-                    
-
+      params=year55
+      
       rmarkdown::render(tempReport, output_file = file,
                         
                         params = params,
