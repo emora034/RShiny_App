@@ -1,0 +1,10 @@
+---
+title: "report"
+author: "Elianne Mora"
+date: "March 11, 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#params$year2
+```
