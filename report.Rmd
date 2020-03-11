@@ -3,8 +3,46 @@ title: "report"
 author: "Elianne Mora"
 date: "March 11, 2020"
 output: pdf_document
+params: year55:["2007", "2017"]
 ---
 
-```{r setup, include=FALSE}
-#params$year2
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(gapminder)
+library(DT)
+library(iotools)
+library(basictabler)
+library(qrmtools)
+library(reshape2)
+
+energy <- read_csv("https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD", 
+                   na = "0")
+energy[is.na(energy)]<-0
+#PAGE_TITLE<-"Renewable Energy In Maryland "
+energy<-energy[-9,]
+energy<-energy[-9,]
+energy$`Percent Generation`<-round(energy$`Percent Generation`,0)
+energy[] <- lapply(energy, as.integer)
+energy<- energy[order(energy$Year),]
+energy$Year<-as.factor(energy$Year)
+
+
+enyears<-levels(energy$Year)
+
+energy2<-energy[,1:13]
+dataplot22<-melt(energy2, id="Year")
+
+dataplot3<-dataplot22%>%filter(Year%in%params$year55)
+
+```
+The years selected are:
+```{r , echo=FALSE}
+params$year55
+```
+
+```{r , echo=FALSE}
+ggplot(dataplot3, aes(x=variable, y=value, color= Year, 
+                 group=Year))+geom_bar(position="dodge",stat="identity")+ 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+      xlab("Renewable Energy Source")+ylab("Megawatts Hours")
 ```

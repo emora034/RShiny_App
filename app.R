@@ -232,7 +232,7 @@ server<-function(input,output, session){
     content = function(file) {
       tempReport <- file.path(tempdir(), "report.Rmd")
       
-      year55=isolate(input$year2)
+      year55=list(isolate(input$year2))
       
       file.copy("report.Rmd", tempReport, overwrite = TRUE)
       params=year55
