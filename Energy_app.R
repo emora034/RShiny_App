@@ -24,7 +24,15 @@ energy<-energy[-9,]
 attach(energy)
 energy$`Percent Generation`<-round(energy$`Percent Generation`,0)
 energy[] <- lapply(energy, as.integer)
+energy<- energy[order(energy$Year),]
 options(DT.options = list(pageLength = 5))
+
+#dataset Renewable Energy Generation Capacity: 2006 - 2017 
+gen<-read_csv("https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD",
+              na="0")
+gen[is.na(gen)]<-0
+gen<-gen[order(gen$Year),]
+
 
 #set skeleton and tabs
 headerImagePanel <- function(title, src) {
@@ -54,10 +62,19 @@ datainfo<-tabPanel("About",
                              )
 
 dataPanel<-tabPanel("Data",
+                   
+                        #input selector
+                        selectInput(inputId = "dataset",
+                                    label="Select a dataset",
+                                    choices= c(" ", "Renewable Energy Generation Capacity (2006-2017)", "Renewable Energy Generated (2007-2017)"))
+                      ,
                     mainPanel(
                       br(),
-                      DT::dataTableOutput("dataTable"), align="center")
-)
+                      DT::dataTableOutput("dataTable")
+                      )
+                    )
+
+
 
 
 plotPanel<-tabPanel("Plots",
@@ -68,7 +85,8 @@ plotPanel<-tabPanel("Plots",
                       )
 )
 
-#user server set up
+###########################
+####### USER SERVER #######
 ui<-fluidPage(
   tags$head(
     tags$style(HTML("
@@ -93,7 +111,14 @@ server<-function(input,output){
     tag$img(src="https://www.cancer.gov/images/cdr/live/CDR755927-750.jpg")
   )
   
-  output$dataTable<-DT::renderDataTable(energy)
+  datasetInput<- reactive({ req(input$dataset)
+    switch(input$dataset,
+           "Renewable Energy Generation Capacity (2006-2017)"= gen,
+           "Renewable Energy Generated (2007-2017)"= energy
+    )
+  })
+  
+  output$dataTable<-renderDataTable(datasetInput())
                                          
                                 
   output$plotdata<-renderMetricsgraphics({
