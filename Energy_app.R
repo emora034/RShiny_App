@@ -13,6 +13,7 @@ library(readr)
 library(DT)
 library(iotools)
 library(basictabler)
+library(qrmtools)
 
 #dataset Renewable Energy Generated in Maryland from data.gov
 energy <- read_csv("https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD", 
@@ -25,6 +26,7 @@ attach(energy)
 energy$`Percent Generation`<-round(energy$`Percent Generation`,0)
 energy[] <- lapply(energy, as.integer)
 energy<- energy[order(energy$Year),]
+energy$Year<-as.factor(energy$Year)
 options(DT.options = list(pageLength = 5))
 
 #dataset Renewable Energy Generation Capacity: 2006 - 2017 
@@ -32,8 +34,12 @@ gen<-read_csv("https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?access
               na="0")
 gen[is.na(gen)]<-0
 gen<-gen[order(gen$Year),]
+gen$Year<-as.factor(gen$Year)
 
-
+enyears<-levels(energy$Year)
+genyears<-levels(gen$Year)
+genvar<-gen[,2:13]
+envar<-energy[,2:13]
 #set skeleton and tabs
 headerImagePanel <- function(title, src) {
   div(
@@ -92,31 +98,23 @@ dataPanel<-tabPanel("Data",
 
 
 
-plotPanel<-tabPanel("Plots",
-        sidebarPanel(
-          selectInput(
-            p(),
-            inputId = "dataset",
-            label="Select a dataset",
-            choices= c(" ", "Renewable Energy Generation Capacity (2006-2017) ", 
-                       "Renewable Energy Generated (2007-2017) "))
-          ,
-          selectInput("variable", "Variable:", choices=NULL),
-          selectInput("year", "Year:", choices=NULL),
-          selectInput("plot.type", "Plot Type:",
-                      list(boxplot="boxplot", histogram="histogram", 
-                           density="density", bar="bar")),
-          checkboxInput("show.points", "show points", TRUE),
-          
+plotPanel<-tabPanel("Capacity",
+       
+          selectInput("year", multiple=TRUE,
+                      "Year:", genyears,
+                      selected=head(gen,3)),
+          selectInput("var", multiple=TRUE,
+                      "Variable:", colnames(gen[,2:13])),
+                        p(),
                     mainPanel(
-                      h3(textOutput("caption")),
-                     # p("", style = "font-family: Lucida Grande,Lucida Sans Unicode"),
-                    #  p("", style = "font-family: Lucida Grande,Lucida Sans Unicode"),
-                      uiOutput("plot")
+                      p(),
+                      tableOutput("captable"),
+                      p(),
+                    plotOutput("plot")
                     #metricsgraphicsOutput("plotdata")
                       )
 )
-)
+
 ###########################
 ####### USER SERVER #######
 ui<-fluidPage(
@@ -149,50 +147,24 @@ server<-function(input,output){
            "Renewable Energy Generated (2007-2017) "= energy
     )
   })
-  
+
   output$dataTable<-renderDataTable(datasetInput())
-                                         
-  output$caption<-renderText({
-    switch(input$plot.type,
-           "boxplot"="Boxplot",
-           "histogram"="Histogram",
-           "density" ="Density Plot",
-           "bar"="Bar Graph")
-  })
-  output$plot<-renderUI({
-    plotOutput("p")
+  
+  #capacity page
+  genfilter<-reactive({
+    req(input$year)
+    #req(input$variable)
+    gen%>%filter(Year%in%input$year) #colnames(gen)%in%input$variable)
   })
   
-  datasetplot<-reactive({
-    check<-function(x){is.null(x) || x==""}
-    if(check(input$dataset))return()
-    
-    obj<-list(data=get(input$dataset),
-              variable=input$variable,
-              group=input$group)
-    
-    if(any(sapply(obj,check)))return()
-    check<-function(obj){
-      !all(c(obj$variable, obj$group)%in%colnames(obj$data))
-    }
-    if(check(obj))return()
-    obj
-  })
+ output$captable<-renderTable(genfilter())
+ 
+
+
   
-  output$p<-renderPlot({
-    plot.obj<-get_data()
-    if(is.null(plot.obj))return()
-    
-    if(plot.obj$variable==""|plot.obj$group=="")return()
-    
-    plot.type<-switch(input$plot.type,
-                      "boxplot"=geom_boxplot(),
-                      "histogram"=geom_histogram(),
-                      "density"=geom_density(),
-                      "bar"=geom_bar())
-    
-  })
-}
+#final closing bracket
+  }
+
 
 #Run app 
 shinyApp(ui=ui, server=server)
