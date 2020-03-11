@@ -8,7 +8,7 @@ library(plotly)
 library(htmltools)
 library(DT)
 library(iotools)
-#library(qrmtools)
+library(qrmtools)
 library(reshape2)
 
 #dataset Renewable Energy Generated in Maryland from data.gov
@@ -228,9 +228,9 @@ server<-function(input,output){
       tempReport <- file.path(tempdir(), "report.Rmd")
       
       file.copy("report.Rmd", tempReport, overwrite = TRUE)
-      params<-list(selyear=isolate(input$year2)) 
-      data=genplotfilter()
-      
+      params<-list(year=isolate(input$year2))
+                    
+
       rmarkdown::render(tempReport, output_file = file,
                         
                         params = params,
